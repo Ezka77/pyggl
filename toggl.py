@@ -2,7 +2,7 @@ import click
 import csv
 from datetime import timedelta, time
 
-""" Toggl for lazy people
+"""Toggl for lazy people
 
 ... or in need of a time travel machine.
 

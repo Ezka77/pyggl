@@ -6,7 +6,7 @@
 Use pip to install:
 - click
 
-Work with python 3.6 ... not tested below that version
+Works with python 3.6 ... not tested below that version
 
 ## Usage
 

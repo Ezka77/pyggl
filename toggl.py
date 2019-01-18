@@ -4,10 +4,16 @@ from datetime import timedelta, time
 
 """ Toggl for lazy people
 
-Generate csv lines for toggl time tracking.
+... or in need of a time travel machine.
+
+Generate csv lines for toggl time tracking system.
 A simple tool to create one task for N days of continuous work on a time
-period. For each day it split the task to allow a pause between mornig and
+period. For each day it split the task to allow a pause between morning and
 afternoon work.
+
+Not configurable things:
+    - a day work is 9h00 to 12h00 and 14h00 to 18h00 (yeah =D)
+    - a week is from Monday to Friday
 """
 
 
@@ -29,9 +35,8 @@ class ToggleCmd():
         self.cmdargs = kargs
 
     def get_rows(self, day):
-        row_dict = {k: "" for k in self.header}
         # Morning
-        mrow = {k: self.cmdargs[k] for k in row_dict.keys()
+        mrow = {k: self.cmdargs[k] for k in self.header
                 if k in self.cmdargs}
         # TODO: hardcoded things
         mrow['Start date'] = day.date().isoformat()
@@ -40,7 +45,7 @@ class ToggleCmd():
         mrow['End time'] = time(hour=12).isoformat()
         mrow['Duration'] = '03:00:00'
         # Afternoon
-        arow = {k: self.cmdargs[k] for k in row_dict.keys()
+        arow = {k: self.cmdargs[k] for k in self.header
                 if k in self.cmdargs}
         # TODO: hardcoded things
         arow['Start date'] = day.date().isoformat()
@@ -81,7 +86,7 @@ class ToggleCmd():
 @click.option("-u", "--user", 'User', help="user name")
 @click.option("-m", "--email", 'Email', required=True, help="user mail")
 @click.option("-p", "--project", 'Project', default="", help="project name")
-@click.option("-t", "--tag", 'Tag', default="", help="add tag")
+@click.option("-t", "--tag", 'Tags', default="", help="add tag")
 @click.option("-d", "--description", 'Description',
               default="", help="description")
 @click.option("--out", default='taggle.csv', help="output name file")

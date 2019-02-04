@@ -1,6 +1,8 @@
 import click
+import configparser
 import csv
 from datetime import timedelta, time
+import datetime
 
 """Toggl for lazy people
 
@@ -91,41 +93,62 @@ class ToggleCmd():
                 writer.writerow(value[1])
 
 
-@click.command()
+# For now use today at 0:0 time
+today = datetime.datetime.combine(datetime.date.today(), datetime.time(0),)
+
+
+def my_period(ctx, param, period):
+    # One arg in period
+    #  if today: start = end
+    #  if < today: start = period[0] and end = today
+    if len(period) == 1:
+        if period[0] == today:
+            return (period[0], period[0])
+        if period[0] < today:
+            return (period[0], today)
+        if today < period[0]:
+            return (today, period[0])
+    return period[:2]
+
+
+CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
+
+
+@click.command(context_settings=CONTEXT_SETTINGS)
 @click.option("-u", "--user", 'User', help="user name")
-@click.option("-m", "--email", 'Email', required=True, help="user mail")
-@click.option("-p", "--project", 'Project', default="", help="project name")
-@click.option("-t", "--tag", 'Tags', default="", help="add tag")
-@click.option("-d", "--description", 'Description',
-              default="", help="description")
-@click.option("--out", default='taggle.csv', help="output name file")
+@click.option("-m", "--email", 'Email', help="user mail")
+@click.option("-p", "--project", 'Project', help="project name")
+@click.option("-t", "--tag", 'Tags', help="add tag")
+@click.option("-d", "--description", 'Description', help="description")
+@click.option("-f", "--config", type=click.Path(), default="pyggl.conf",
+              help="configuration file")
+@click.option("--out", type=click.Path(), default='taggle.csv',
+              help="output name file")
 # @click.option("--hours-per-day", "-h", 'hperday', default=7,
 #               help="number of our per day")
-@click.argument("start", type=click.DateTime())
-@click.argument("end", type=click.DateTime())
+@click.argument("period", type=click.DateTime(), nargs=-1,
+                callback=my_period)
 def main(**kargs):
-    cmd = ToggleCmd(**kargs)
+    kargs['start'], kargs['end'] = kargs.pop('period')
+    try:
+        conf = configparser.ConfigParser()
+        conf.optionxform = str
+        conf.read(kargs['config'])
+        d_conf = {k: v for k, v in conf.items('Toggl')}
+    except configparser.NoSectionError:
+        d_conf = {}
+    # remove None from kargs if set in d_conf
+    d_args = {k: v for k, v in kargs.items()
+              if k not in d_conf or v is not None}
+    # update d_conf with d_args
+    d_conf.update(d_args)
+    try:
+        assert(d_conf['Email'])
+    except AssertionError:
+        raise click.UsageError("missing parameter: 'Email'")
+    cmd = ToggleCmd(**d_conf)
     cmd.write_csv()
 
 
-import os
-from pathlib import Path
-import configparser
-
-
-@click.command()
-@click.option(
-        "-f", "--config",
-        default="pyggl.conf",
-        help="configuration file")
-def tocsv(config):
-    """From a local Pyggl configuration file write CSV to upload to Toggl
-    """
-    print(config)
-    config = configparser.ConfigParser()
-    config.read(config)
-    print(config.sections())
-
-
 if __name__ == '__main__':
-    tocsv()
+    main()

@@ -2,12 +2,18 @@
 
 ... or in need of a time travel machine.
 
-## Requirements
+## Installation
 
-Use pip to install:
+Requirements:
 - click
 
 Works with python 3.7 ... not tested below that version
+
+For now devel install:
+
+```pip install -e .
+```
+
 
 ## WTF of this script ?
 
@@ -18,6 +24,6 @@ toggl (free version). So for a long day or many days of work on a single task
 
 ## Usage
 
-Get help : `python toggl.py --help`
+Get help : `pyggl --help`
 
 Ho BTW it'll append rows to an already existing csv.

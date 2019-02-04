@@ -29,9 +29,14 @@ pip install dist/pyggl-0.1-py3-none-any.whl
 
 ## WTF of this script ?
 
-Well, sometime it come to be quite boring to duplicate and modify time on
-toggl (free version). So for a long day or many days of work on a single task
-... one command, upload the CSV and done.
+Well, sometime it come to be quite boring to use the UI from toggl (free
+version). So for a long day or many days of work on a single task ... one
+command, upload the CSV and done.
+
+
+NB: there is plenty of nice scripts working with Toggle API, but I like
+writing CSV files ... and it works with any other tool who allow you to import
+data from Toggl ;-)
 
 
 ## Usage

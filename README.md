@@ -9,9 +9,21 @@ Requirements:
 
 Works with python 3.7 ... not tested below that version
 
-For now devel install:
+Install from source
 
-```pip install -e .
+```
+pip install -e .
+```
+
+Or build the package:
+```
+python setup.py bdist_wheel sdist
+```
+
+and install:
+
+```
+pip install dist/pyggl-0.1-py3-none-any.whl
 ```
 
 

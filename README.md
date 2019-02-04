@@ -39,3 +39,30 @@ toggl (free version). So for a long day or many days of work on a single task
 Get help : `pyggl --help`
 
 Ho BTW it'll append rows to an already existing csv.
+
+## Exemple of configuration file
+
+
+By default, `pyggl` read default configuration from current directory from a
+file name `pyggl.conf`. For exemple:
+
+```INI
+[Toggl]
+User=MyDummyUser
+Email=mydummyemail@mydummy.com
+Project=MyDummyProject
+Tags=MyDummyTag
+Description=A dummy task description
+
+[pyggl]
+period_per_day = 8-12,14-18
+```
+
+Command line argument take precedence over this file. You can for exemple use
+one file per project with these defaults:
+
+```INI
+[Toggl]
+Email=pinkyandthebrain@acme.labs
+Project=Takeover the world !
+```

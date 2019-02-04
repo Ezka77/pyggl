@@ -43,28 +43,15 @@ class ToggleCmd():
         mrow['Start time'] = time(hour=hstart).isoformat()
         mrow['End date'] = day.date().isoformat()
         mrow['End time'] = time(hour=hend).isoformat()
-        mrow['Duration'] = '03:00:00'
+        mrow['Duration'] = str(timedelta(hours=hend) -
+                               timedelta(hours=hstart))
+        return mrow
 
-    def get_rows(self, day):
-        # Morning
-        mrow = {k: self.cmdargs[k] for k in self.header
-                if k in self.cmdargs}
-        # TODO: hardcoded things
-        mrow['Start date'] = day.date().isoformat()
-        mrow['Start time'] = time(hour=9).isoformat()
-        mrow['End date'] = day.date().isoformat()
-        mrow['End time'] = time(hour=12).isoformat()
-        mrow['Duration'] = '03:00:00'
-        # Afternoon
-        arow = {k: self.cmdargs[k] for k in self.header
-                if k in self.cmdargs}
-        # TODO: hardcoded things
-        arow['Start date'] = day.date().isoformat()
-        arow['Start time'] = time(hour=14).isoformat()
-        arow['End date'] = day.date().isoformat()
-        arow['End time'] = time(hour=18).isoformat()
-        arow['Duration'] = '04:00:00'
-        return (mrow, arow)
+    def write_rows(self, day, writer):
+        # for eah interval get a row
+        for i in self.get_period_per_day(self.cmdargs['period_per_day']):
+            value = self.get_time_row(day, *list(i))
+            writer.writerow(value)
 
     @staticmethod
     def weekday_gen(start, end):
@@ -88,9 +75,15 @@ class ToggleCmd():
             if is_header_needed:
                 writer.writeheader()
             for day in wgen:
-                value = self.get_rows(day)
-                writer.writerow(value[0])
-                writer.writerow(value[1])
+                self.write_rows(day, writer)
+
+    @staticmethod
+    def get_period_per_day(value):
+        import re
+        regex = r"([\d]{1,2})-([\d]{1,2})"
+        matches = re.finditer(regex, value, re.MULTILINE)
+        intervals = ((int(k) for k in match.groups()) for match in matches)
+        return intervals
 
 
 # For now use today at 0:0 time
@@ -124,12 +117,15 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
               help="configuration file")
 @click.option("--out", type=click.Path(), default='taggle.csv',
               help="output name file")
-# @click.option("--hours-per-day", "-h", 'hperday', default=7,
-#               help="number of our per day")
+@click.option("--period-per-day", 'period_per_day', default=None,
+              help="Work interval per day")
 @click.argument("period", type=click.DateTime(), nargs=-1,
                 callback=my_period)
 def main(**kargs):
+    """Create CSV file for Toggl import.
+    """
     kargs['start'], kargs['end'] = kargs.pop('period')
+    # Try to read default Toggl configuration
     try:
         conf = configparser.ConfigParser()
         conf.optionxform = str
@@ -137,6 +133,11 @@ def main(**kargs):
         d_conf = {k: v for k, v in conf.items('Toggl')}
     except configparser.NoSectionError:
         d_conf = {}
+    # try to add pyggl defaults from configuration
+    try:
+        d_conf.update({k: v for k, v in conf.items('pyggl')})
+    except configparser.NoSectionError:
+        pass
     # remove None from kargs if set in d_conf
     d_args = {k: v for k, v in kargs.items()
               if k not in d_conf or v is not None}
@@ -146,6 +147,9 @@ def main(**kargs):
         assert(d_conf['Email'])
     except AssertionError:
         raise click.UsageError("missing parameter: 'Email'")
+    if d_conf['period_per_day'] is None:
+        d_conf['period_per_day'] = "9-12,14-18"
+    # Start CMD
     cmd = ToggleCmd(**d_conf)
     cmd.write_csv()
 

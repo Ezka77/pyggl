@@ -34,6 +34,15 @@ class ToggleCmd():
     def __init__(self, **kargs):
         self.cmdargs = kargs
 
+    def get_time_row(self, day, hstart, hend):
+        mrow = {k: self.cmdargs[k] for k in self.header
+                if k in self.cmdargs}
+        mrow['Start date'] = day.date().isoformat()
+        mrow['Start time'] = time(hour=hstart).isoformat()
+        mrow['End date'] = day.date().isoformat()
+        mrow['End time'] = time(hour=hend).isoformat()
+        mrow['Duration'] = '03:00:00'
+
     def get_rows(self, day):
         # Morning
         mrow = {k: self.cmdargs[k] for k in self.header
@@ -90,12 +99,33 @@ class ToggleCmd():
 @click.option("-d", "--description", 'Description',
               default="", help="description")
 @click.option("--out", default='taggle.csv', help="output name file")
+# @click.option("--hours-per-day", "-h", 'hperday', default=7,
+#               help="number of our per day")
 @click.argument("start", type=click.DateTime())
 @click.argument("end", type=click.DateTime())
-def taggle(**kargs):
+def main(**kargs):
     cmd = ToggleCmd(**kargs)
     cmd.write_csv()
 
 
+import os
+from pathlib import Path
+import configparser
+
+
+@click.command()
+@click.option(
+        "-f", "--config",
+        default="pyggl.conf",
+        help="configuration file")
+def tocsv(config):
+    """From a local Pyggl configuration file write CSV to upload to Toggl
+    """
+    print(config)
+    config = configparser.ConfigParser()
+    config.read(config)
+    print(config.sections())
+
+
 if __name__ == '__main__':
-    taggle()
+    tocsv()

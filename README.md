@@ -4,12 +4,9 @@
 
 ## Installation
 
-Requirements:
-- click
-
 Works with python 3.7 ... not tested below that version
 
-Install from source
+Install from sources
 
 ```
 pip install -e .
@@ -20,7 +17,7 @@ Or build the package:
 python setup.py bdist_wheel sdist
 ```
 
-and install:
+and install it:
 
 ```
 pip install dist/pyggl-0.1-py3-none-any.whl
@@ -45,8 +42,8 @@ Get help : `pyggl --help`
 
 Ho BTW it'll append rows to an already existing csv.
 
-## Exemple of configuration file
 
+## Exemple of configuration file
 
 By default, `pyggl` read default configuration from current directory from a
 file name `pyggl.conf`. For exemple:

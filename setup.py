@@ -7,6 +7,8 @@ with open(os.path.join(here, 'README.md')) as f:
 
 requires = [
         'click',
+        'click_configfile',
+        'colorama',
         ]
 
 setup(name='pyggl',

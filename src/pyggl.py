@@ -1,5 +1,10 @@
 import click
-import configparser
+from click_configfile import (
+    matches_section,
+    Param,
+    SectionSchema,
+    ConfigFileReader
+    )
 import csv
 from datetime import timedelta, time
 import datetime
@@ -17,6 +22,30 @@ Not configurable things:
     - a day work is 9h00 to 12h00 and 14h00 to 18h00 (yeah =D)
     - a week is from Monday to Friday
 """
+
+
+class ConfigSectionSchema(object):
+    """Describes all config sections of this configuration file."""
+
+    @matches_section("Toggl")
+    class TogglCF(SectionSchema):
+        User = Param(type=str)
+        Email = Param(type=str)
+        Project = Param(type=str)
+        Tags = Param(type=str)
+        Description = Param(type=str)
+
+    @matches_section("pyggl")   # Matches multiple sections
+    class PygglCF(SectionSchema):
+        period_per_day = Param(type=str)
+
+
+class ConfigFileProcessor(ConfigFileReader):
+    config_files = ["pyggl.ini", "pyggl.cfg", "pyggl.conf"]
+    config_section_schemas = [
+        ConfigSectionSchema.TogglCF,     # PRIMARY SCHEMA
+        ConfigSectionSchema.PygglCF,
+    ]
 
 
 class ToggleCmd():
@@ -104,12 +133,15 @@ def my_period(ctx, param, period):
     return period[:2]
 
 
-CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
+CONTEXT_SETTINGS = dict(
+        help_option_names=['-h', '--help'],
+        default_map=ConfigFileProcessor.read_config()
+        )
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option("-u", "--user", 'User', help="user name")
-@click.option("-m", "--email", 'Email', help="user mail")
+@click.option("-m", "--email", 'Email', required=True, help="user mail")
 @click.option("-p", "--project", 'Project', help="project name")
 @click.option("-t", "--tag", 'Tags', help="add tag")
 @click.option("-d", "--description", 'Description', help="description")
@@ -117,41 +149,24 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
               help="configuration file")
 @click.option("--out", type=click.Path(), default='taggle.csv',
               help="output name file")
-@click.option("--period-per-day", 'period_per_day', default=None,
+@click.option("--period-per-day", 'period_per_day', default="9-12,14-18",
               help="Work interval per day")
 @click.argument("period", type=click.DateTime(), nargs=-1,
                 callback=my_period)
-def main(**kargs):
+@click.pass_context
+def main(ctx, **kargs):
     """Create CSV file for Toggl import.
     """
-    kargs['start'], kargs['end'] = kargs.pop('period')
-    # Try to read default Toggl configuration
     try:
-        conf = configparser.ConfigParser()
-        conf.optionxform = str
-        conf.read(kargs['config'])
-        d_conf = {k: v for k, v in conf.items('Toggl')}
-    except configparser.NoSectionError:
-        d_conf = {}
-    # try to add pyggl defaults from configuration
-    try:
-        d_conf.update({k: v for k, v in conf.items('pyggl')})
-    except configparser.NoSectionError:
-        pass
-    # remove None from kargs if set in d_conf
-    d_args = {k: v for k, v in kargs.items()
-              if k not in d_conf or v is not None}
-    # update d_conf with d_args
-    d_conf.update(d_args)
-    try:
-        assert(d_conf['Email'])
-    except AssertionError:
-        raise click.UsageError("missing parameter: 'Email'")
-    if d_conf['period_per_day'] is None:
-        d_conf['period_per_day'] = "9-12,14-18"
-    # Start CMD
-    cmd = ToggleCmd(**d_conf)
+        kargs['start'], kargs['end'] = kargs.pop('period')
+    except ValueError:
+        click.secho("Missing date argument(s) !\n", fg="red", err=True)
+        click.echo(ctx.get_help())
+        return
+
+    cmd = ToggleCmd(**kargs)
     cmd.write_csv()
+    click.secho(f"Data added to `{kargs['out']}`", fg="green")
 
 
 if __name__ == '__main__':

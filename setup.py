@@ -12,7 +12,7 @@ requires = [
         ]
 
 setup(name='pyggl',
-      version='0.1',
+      version='0.2',
       description='Toggl CSV creator',
       long_description=README,
       author='Théo Vaquer',

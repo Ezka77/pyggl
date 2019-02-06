@@ -1,0 +1,9 @@
+[Toggl]
+Email=pinkyandthebrain@acme.labs
+Project=Takeover the world !
+User=TheBrain
+Tags=Plan 001
+Description=Escape !
+
+[pyggl]
+period_per_day = 8-12,14-18

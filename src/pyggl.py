@@ -13,14 +13,7 @@ import datetime
 
 ... or in need of a time travel machine.
 
-Generate csv lines for toggl time tracking system.
-A simple tool to create one task for N days of continuous work on a time
-period. For each day it split the task to allow a pause between morning and
-afternoon work.
-
-Not configurable things:
-    - a day work is 9h00 to 12h00 and 14h00 to 18h00 (yeah =D)
-    - a week is from Monday to Friday
+Generate csv lines for toggl time tracking web service.
 """
 
 
@@ -66,6 +59,9 @@ class ToggleCmd():
         self.cmdargs = kargs
 
     def get_time_row(self, day, hstart, hend):
+        """
+        Create a 'time row': a representation of a CSV entry.
+        """
         mrow = {k: self.cmdargs[k] for k in self.header
                 if k in self.cmdargs}
         mrow['Start date'] = day.date().isoformat()
@@ -84,6 +80,10 @@ class ToggleCmd():
 
     @staticmethod
     def weekday_gen(start, end):
+        """
+        Day week generator: initialize with a start datetime to begin with
+        until we reach the end marked datetime.
+        """
         one_day = timedelta(days=1)
         day = start
         while day <= end:
@@ -119,6 +119,7 @@ class ToggleCmd():
 today = datetime.datetime.combine(datetime.date.today(), datetime.time(0),)
 
 
+# Callback to process command line
 def my_period(ctx, param, period):
     # One arg in period
     #  if today: start = end
